@@ -21,11 +21,14 @@ int main() {
             std::cout << "Not Valid value\n";
         }
     }
-    for (int i = 0; i < INT_MAX; ++i) {
+    for (int i = 0; i < 1000000; ++i) {
         if (state == 1) {
             server->onUpdate();
         } else if (state == 2) {
             client->onUpdate();
+            if (!client->serverValid()) {
+                break;
+            }
         }
     }
 

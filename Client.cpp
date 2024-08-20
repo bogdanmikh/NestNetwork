@@ -32,8 +32,8 @@ namespace Nest {
         enet_address_set_host(&address, "127.0.0.1");
         address.port = 7777;
         /* Initiate the connection, allocating the two channels 0 and 1. */
-        m_peer = enet_host_connect(m_client, &address, 2, 0);
-        if (m_peer == nullptr) {
+        m_server = enet_host_connect(m_client, &address, 2, 0);
+        if (m_server == nullptr) {
             fprintf(stderr,
                     "No available peers for initiating an ENet connection.\n");
             exit(EXIT_FAILURE);
@@ -45,14 +45,13 @@ namespace Nest {
             if (m_event.type == ENET_EVENT_TYPE_CONNECT) {
                 m_disconnected = false;
                 std::cout << "Connected to server!" << std::endl;
-                // Отправляем пакет "Hello from client"
-                ENetPacket* packet = enet_packet_create("Hello from client", strlen("Hello from client") + 1, ENET_PACKET_FLAG_RELIABLE);
-                std::cout << "Packet data: " << (char*)packet->data;
-                enet_peer_send(m_peer, 0, packet);
                 enet_host_flush(m_client);
             } else if (m_event.type == ENET_EVENT_TYPE_RECEIVE) {
-                std::cout << "Received packet: " << m_event.packet->data << std::endl;
+                auto data = (PushData*)m_event.packet->data;
+                std::cout << "Message from Server: " << data->message << std::endl;
                 enet_packet_destroy(m_event.packet);
+//                std::cin >> m_data.message;
+//                sendData((void*)&m_data, sizeof(m_data));
             } else if (m_event.type == ENET_EVENT_TYPE_DISCONNECT) {
                 puts("Disconnection succeeded.");
                 m_disconnected = true;
@@ -62,9 +61,24 @@ namespace Nest {
 
     void Client::onDetach() {
         if (!m_disconnected) {
-            enet_peer_reset(m_peer);
+            enet_peer_reset(m_server);
         }
         enet_host_destroy(m_client);
         enet_deinitialize();
+    }
+
+    bool Client::serverValid() {
+        if (!m_disconnected) {
+            return true;
+        }
+        static int timeoutServer = 100;
+        return enet_host_service(m_client, &m_event, timeoutServer ) > 0;
+    }
+
+    void Client::sendData(const void* data, size_t size) {
+        ENetPacket *packet = enet_packet_create(data, size, ENET_PACKET_FLAG_RELIABLE);
+        //the second parameter is the channel id
+        enet_peer_send(m_server, 0, packet);
+        enet_host_flush(m_client);
     }
 }

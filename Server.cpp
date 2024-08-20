@@ -30,19 +30,14 @@ namespace Nest {
 
     void Server::onUpdate() {
         ENetEvent event;
-        while (enet_host_service(m_server, &event, 1) > 0) {
+        while (enet_host_service(m_server, &event, 10) > 0) {
             if (event.type == ENET_EVENT_TYPE_CONNECT) {
                 m_clients.emplace_back(event.peer);
                 printf("A new client connected from %x:%u.\n", event.peer->address.host, event.peer->address.port);
-                sendMessage("Idi v jopy", strlen("Idi v jopy"), event.peer);
             } else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
-                std::cout << "Received packet: " << (char *) (event.packet->data) << std::endl;
-                // Отправка данных обратно клиенту
-
-                // Уничтожение полученного пакета
+                std::cout << "Message from Client: " << (char *) (event.packet->data) << std::endl;
                 enet_packet_destroy(event.packet);
             } else if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
-                printf("%s disconnected.\n", event.peer->data);
                 for (int i = 0; i < m_clients.size(); ++i) {
                     if (event.peer == m_clients[i]) {
                         m_clients.erase(m_clients.begin() + i);
@@ -58,6 +53,13 @@ namespace Nest {
                 /// ...
             }
         }
+        if (m_clients.size() < 1) {
+            return;
+        }
+        std::cin >> m_data.message;
+        for (auto client : m_clients) {
+            sendData((void*)&m_data, sizeof(m_data), client);
+        }
     }
 
     void Server::onDetach() {
@@ -65,8 +67,8 @@ namespace Nest {
         enet_deinitialize();
     }
 
-    void Server::sendMessage(const char *data, size_t s, ENetPeer *client) {
-        ENetPacket *packet = enet_packet_create(data, s, ENET_PACKET_FLAG_RELIABLE);
+    void Server::sendData(const void* data, size_t size, ENetPeer *client) {
+        ENetPacket *packet = enet_packet_create(data, size, ENET_PACKET_FLAG_RELIABLE);
 
         //the second parameter is the channel id
         enet_peer_send(client, 0, packet);

@@ -18,7 +18,7 @@
 
 namespace Nest {
 
-std::vector<std::string> getLocalIPAddresses() {
+static std::vector<std::string> getLocalIPAddresses() {
     std::vector<std::string> ipAddresses;
 
 #ifdef _WIN32
@@ -61,6 +61,7 @@ std::vector<std::string> getLocalIPAddresses() {
 
 struct PushData {
     /// something data
+    std::string message;
 };
 
 }
