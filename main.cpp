@@ -7,15 +7,19 @@ int main() {
     Nest::Client *client;
     std::cout << "1 is server, 2 is client\n";
     int state;
+    int port = 7777;
     while (true) {
         std::cin >> state;
         if (state == 1) {
             server = new Nest::Server;
-            server->onAttach();
+            server->onAttach({"Server", port});
             break;
         } else if (state == 2) {
             client = new Nest::Client;
-            client->onAttach();
+            std::string ipServer;
+            std::cout << "Input ip server: ";
+            std::cin >> ipServer;
+            client->onAttach({ipServer, port});
             break;
         } else {
             std::cout << "Not Valid value\n";
@@ -26,9 +30,9 @@ int main() {
             server->onUpdate();
         } else if (state == 2) {
             client->onUpdate();
-            if (!client->serverValid()) {
-                break;
-            }
+//            if (!client->serverValid()) {
+//                break;
+//            }
         }
     }
 

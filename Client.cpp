@@ -7,7 +7,7 @@
 
 namespace Nest {
 
-    void Client::onAttach() {
+    void Client::onAttach(const ServerData& serverData) {
         if (enet_initialize() != 0) {
             fprintf(stderr, "An error occurred while initializing ENet.\n");
             return;
@@ -24,13 +24,14 @@ namespace Nest {
                     "An error occurred while trying to create an ENet client host.\n");
             exit(EXIT_FAILURE);
         }
+        m_event.channelID = 0;
 
         ENetAddress address = { 0 };
-        m_event.channelID = 0;
         /* Connect to some.server.net:1234. */
 
-        enet_address_set_host(&address, "127.0.0.1");
-        address.port = 7777;
+        enet_address_set_host(&address, serverData.ip.c_str());
+        address.port = serverData.port;
+
         /* Initiate the connection, allocating the two channels 0 and 1. */
         m_server = enet_host_connect(m_client, &address, 2, 0);
         if (m_server == nullptr) {
@@ -43,7 +44,7 @@ namespace Nest {
     void Client::onUpdate() {
         while (enet_host_service(m_client, &m_event, 10) > 0) {
             if (m_event.type == ENET_EVENT_TYPE_CONNECT) {
-                m_disconnected = false;
+                m_connected = true;
                 std::cout << "Connected to server!" << std::endl;
                 enet_host_flush(m_client);
             } else if (m_event.type == ENET_EVENT_TYPE_RECEIVE) {
@@ -54,13 +55,13 @@ namespace Nest {
 //                sendData((void*)&m_data, sizeof(m_data));
             } else if (m_event.type == ENET_EVENT_TYPE_DISCONNECT) {
                 puts("Disconnection succeeded.");
-                m_disconnected = true;
+                m_connected = false;
             }
         }
     }
 
     void Client::onDetach() {
-        if (!m_disconnected) {
+        if (!m_connected) {
             enet_peer_reset(m_server);
         }
         enet_host_destroy(m_client);
@@ -68,7 +69,7 @@ namespace Nest {
     }
 
     bool Client::serverValid() {
-        if (!m_disconnected) {
+        if (m_connected) {
             return true;
         }
         static int timeoutServer = 100;

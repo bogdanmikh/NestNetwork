@@ -11,10 +11,14 @@
 #include <vector>
 
 namespace Nest {
+    struct ServerCreateInfo {
+        std::string name;
+        int port;
+    };
 
     class Server {
     public:
-        void onAttach();
+        void onAttach(const ServerCreateInfo& serverCreateInfo);
         void onUpdate();
         void onDetach();
     private:

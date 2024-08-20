@@ -7,9 +7,15 @@
 
 namespace Nest {
 
+    struct ServerData {
+        // localhost 127.0.0.1
+        std::string ip;
+        int port;
+    };
+
     class Client {
     public:
-        void onAttach();
+        void onAttach(const ServerData& serverData);
         void onUpdate();
         void onDetach();
         bool serverValid();
@@ -21,7 +27,7 @@ namespace Nest {
         ENetEvent m_event;
 
         PushData m_data;
-        bool m_disconnected = false;
+        bool m_connected = false;
     };
 
 }

@@ -6,7 +6,7 @@
 #include <iostream>
 
 namespace Nest {
-    void Server::onAttach() {
+    void Server::onAttach(const ServerCreateInfo& serverCreateInfo) {
         if (enet_initialize() != 0) {
             printf("An error occurred while initializing ENet.\n");
             return;
@@ -15,7 +15,9 @@ namespace Nest {
         ENetAddress address = {0};
 
         address.host = ENET_HOST_ANY;
-        address.port = 7777;
+        address.port = serverCreateInfo.port;
+
+        auto ip = getLocalIPAddresses()[1];
 
         /* create a server */
         m_server = enet_host_create(&address, maxClients, 2, 0, 0);
@@ -24,6 +26,7 @@ namespace Nest {
             printf("An error occurred while trying to create an ENet server host.\n");
             return;
         }
+        printf("Your IP: %s\n", ip.c_str());
 
         printf("Started a server...\n");
     }
