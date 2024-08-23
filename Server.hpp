@@ -24,7 +24,7 @@ namespace Nest {
     private:
         PushData m_data;
         static const int maxClients = 4;
-        void sendData(const void* data, size_t s, ENetPeer *client);
+        void sendData(const void* data, size_t size, ENetPeer *client);
         ENetHost* m_server;
         std::vector<ENetPeer*> m_clients;
     };

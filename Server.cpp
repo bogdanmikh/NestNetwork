@@ -38,7 +38,8 @@ namespace Nest {
                 m_clients.emplace_back(event.peer);
                 printf("A new client connected from %x:%u.\n", event.peer->address.host, event.peer->address.port);
             } else if (event.type == ENET_EVENT_TYPE_RECEIVE) {
-                std::cout << "Message from Client: " << (char *) (event.packet->data) << std::endl;
+                auto data = (PushData*)event.packet->data;
+                std::cout << "Message from Client: " << data->message << std::endl;
                 enet_packet_destroy(event.packet);
             } else if (event.type == ENET_EVENT_TYPE_DISCONNECT) {
                 for (int i = 0; i < m_clients.size(); ++i) {
@@ -73,7 +74,7 @@ namespace Nest {
     void Server::sendData(const void* data, size_t size, ENetPeer *client) {
         ENetPacket *packet = enet_packet_create(data, size, ENET_PACKET_FLAG_RELIABLE);
 
-        //the second parameter is the channel id
         enet_peer_send(client, 0, packet);
+        enet_host_flush(client->host);
     }
 }
